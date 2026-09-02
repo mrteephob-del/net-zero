@@ -1,8 +1,16 @@
-import { MOCK_STUDENTS } from '../data/studentsMock';
-
 const SHEET_ID = '10ibvfLk6gYnY0CAWk58JqAGGBxFjREqwVsqZTVZkJqg';
 const CACHE_KEY = 'net_zero_students_cache';
 const CACHE_TIME_KEY = 'net_zero_students_cache_time';
+
+export function getCachedStudents() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    // ignore
+  }
+  return [];
+}
 
 function parseCsv(csvText) {
   const lines = csvText.trim().split(/\r?\n/);
@@ -184,9 +192,9 @@ export async function fetchStudentsFromSheets() {
       // ignore
     }
 
-    // Default fallback to bundled MOCK_STUDENTS
+    // Default fallback to empty array if no cache
     return {
-      students: MOCK_STUDENTS,
+      students: [],
       isLive: false,
       isFallback: true,
       lastUpdated: null

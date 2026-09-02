@@ -4,12 +4,11 @@ import SearchForm from './components/SearchForm';
 import ResultCard from './components/ResultCard';
 import StudentDirectoryModal from './components/StudentDirectoryModal';
 import PassCardModal from './components/PassCardModal';
-import { MOCK_STUDENTS } from './data/studentsMock';
-import { fetchStudentsFromSheets } from './services/sheetsService';
-import { CheckCircle2, ShieldCheck, Clock, Users, ExternalLink } from 'lucide-react';
+import { fetchStudentsFromSheets, getCachedStudents } from './services/sheetsService';
+import { CheckCircle2, ShieldCheck, Clock, Users, ExternalLink, Loader2 } from 'lucide-react';
 
 export default function App() {
-  const [students, setStudents] = useState(MOCK_STUDENTS);
+  const [students, setStudents] = useState(() => getCachedStudents());
   const [searchedId, setSearchedId] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
