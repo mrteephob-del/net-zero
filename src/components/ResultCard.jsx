@@ -176,7 +176,7 @@ export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
         <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-700/80 space-y-3">
           <p class="text-xs font-semibold text-slate-300 flex items-center gap-1.5 border-b border-slate-800 pb-2">
             <Recycle class="w-4 h-4 text-emerald-400" />
-            <span>ประวัติรายการวัสดุรีไซเคิลที่นำมาแลก (รวม {searchResult.submissions.length} รอบรายการ):</span>
+            <span>ประวัติรายการกิจกรรมจิตอาสา (รวม {searchResult.submissions.length} รอบรายการ):</span>
           </p>
 
           <div class="space-y-2 text-xs">
@@ -187,19 +187,30 @@ export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
                     {sub.batch}
                   </span>
                   <span class="text-slate-300">
-                    {sub.bottleSmall !== '-' && `ขวดเล็ก 550ml: ${sub.bottleSmall} | `}
-                    {sub.bottleLarge !== '-' && `ขวดใหญ่ 1.5L: ${sub.bottleLarge} | `}
-                    {sub.cans !== '-' && `กระป๋อง: ${sub.cans} | `}
-                    {sub.paper !== '-' && `กระดาษ/หนังสือ: ${sub.paper} | `}
-                    {sub.clothes !== '-' && `เสื้อผ้า: ${sub.clothes}`}
+                    {sub.bottleSmall && sub.bottleSmall !== '-' 
+                      ? `ขวดเล็ก: ${sub.bottleSmall} | ขวดใหญ่: ${sub.bottleLarge} | กระป๋อง: ${sub.cans}`
+                      : (sub.details || `บันทึกกิจกรรมจิตอาสา (${sub.regDate || 'โครงการ'})`)}
                   </span>
                 </div>
                 <span class="text-amber-400 font-mono font-bold">
-                  {sub.totalHours}
+                  +{sub.hours !== undefined ? sub.hours : sub.totalHours} ชม.
                 </span>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Action Button: Digital Pass */}
+      {onOpenPass && (
+        <div class="pt-2">
+          <button
+            onClick={() => onOpenPass(searchResult)}
+            class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-900/30 flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.99]"
+          >
+            <QrCode class="w-4 h-4" />
+            <span>เปิดบัตรรับรองจิตอาสา (Digital Volunteer Pass)</span>
+          </button>
         </div>
       )}
 

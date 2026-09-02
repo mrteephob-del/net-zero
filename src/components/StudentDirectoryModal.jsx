@@ -73,8 +73,7 @@ export default function StudentDirectoryModal({ isOpen, onClose, students, onSel
           >
             <option value="ALL">สถานะทั้งหมด</option>
             <option value="APPROVED">อนุมัติแล้ว</option>
-            <option value="NEEDS_DOC">รอหลักฐานเพิ่มเติม</option>
-            <option value="PENDING">ยังไม่ถึงเกณฑ์</option>
+            <option value="PENDING">ยังไม่ถึงเกณฑ์ / รอตรวจสอบ</option>
           </select>
         </div>
 
@@ -107,7 +106,7 @@ export default function StudentDirectoryModal({ isOpen, onClose, students, onSel
                       </span>
                     </p>
                     <p class="text-xs text-slate-400">
-                      {student.faculty} • {student.major} ({student.year})
+                      {student.faculty} {student.major ? `• ${student.major}` : ''} ({student.year})
                     </p>
                   </div>
                 </div>

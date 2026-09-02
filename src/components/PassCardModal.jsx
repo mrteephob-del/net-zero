@@ -61,7 +61,7 @@ export default function PassCardModal({ student, isOpen, onClose }) {
               </span>
             </div>
             <p class="text-xs text-slate-400 pt-1">
-              {student.faculty} • {student.major} ({student.year})
+              {student.faculty} {student.major ? `• ${student.major}` : ''} ({student.year})
             </p>
           </div>
 

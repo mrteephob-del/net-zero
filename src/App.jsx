@@ -40,8 +40,8 @@ export default function App() {
 
   // Quick stats calculation
   const totalStudents = students.length;
-  const registeredCount = students.filter(s => s.status === 'REGISTERED').length;
-  const eligibleCount = students.filter(s => s.status === 'ELIGIBLE').length;
+  const approvedCount = students.filter(s => s.status === 'APPROVED').length;
+  const totalVolunteerHours = Math.round(students.reduce((sum, s) => sum + (s.totalHoursNumeric || 0), 0) * 10) / 10;
 
   return (
     <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-blue-600 selection:text-white font-['Prompt',sans-serif]">
@@ -79,16 +79,16 @@ export default function App() {
         {/* System Summary Stats Counter Chips */}
         <div class="w-full grid grid-cols-3 gap-2 sm:gap-3 mt-8 pt-6 border-t border-slate-800/80">
           <div class="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl text-center">
-            <p class="text-[11px] text-slate-400 font-medium">ทั้งหมดในระบบ</p>
+            <p class="text-[11px] text-slate-400 font-medium">นิสิตทั้งหมด</p>
             <p class="text-base font-bold text-blue-400 font-mono">{totalStudents} คน</p>
           </div>
           <div class="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl text-center">
-            <p class="text-[11px] text-slate-400 font-medium">ลงทะเบียนแล้ว</p>
-            <p class="text-base font-bold text-emerald-400 font-mono">{registeredCount} คน</p>
+            <p class="text-[11px] text-slate-400 font-medium">ผ่านการอนุมัติ</p>
+            <p class="text-base font-bold text-emerald-400 font-mono">{approvedCount} คน</p>
           </div>
           <div class="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl text-center">
-            <p class="text-[11px] text-slate-400 font-medium">มีสิทธิ์รอเข้างาน</p>
-            <p class="text-base font-bold text-teal-400 font-mono">{eligibleCount} คน</p>
+            <p class="text-[11px] text-slate-400 font-medium">รวมชั่วโมงสะสม</p>
+            <p class="text-base font-bold text-amber-400 font-mono">{totalVolunteerHours} ชม.</p>
           </div>
         </div>
 
