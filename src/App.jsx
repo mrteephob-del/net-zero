@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import ResultCard from './components/ResultCard';
 import StudentDirectoryModal from './components/StudentDirectoryModal';
 import PassCardModal from './components/PassCardModal';
 import { MOCK_STUDENTS } from './data/studentsMock';
+import { fetchStudentsFromSheets } from './services/sheetsService';
 import { CheckCircle2, ShieldCheck, Clock, Users, ExternalLink } from 'lucide-react';
 
 export default function App() {
@@ -13,10 +14,43 @@ export default function App() {
   const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [sheetStatus, setSheetStatus] = useState({ isLive: false, lastUpdated: null });
   
   // Modals state
   const [isDirectoryOpen, setIsDirectoryOpen] = useState(false);
   const [passStudent, setPassStudent] = useState(null);
+
+  // Sync data from Google Sheets
+  const syncData = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetchStudentsFromSheets();
+      if (res.students && res.students.length > 0) {
+        setStudents(res.students);
+        setSheetStatus({
+          isLive: res.isLive,
+          isCached: res.isCached,
+          lastUpdated: res.lastUpdated
+        });
+        
+        // If current search result exists, update it with fresh data
+        if (searchedId) {
+          const fresh = res.students.find(s => s.id === searchedId);
+          if (fresh) setSearchResult(fresh);
+        }
+      }
+    } catch (err) {
+      console.error('Google Sheets Sync failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [searchedId]);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    syncData();
+  }, []);
 
   // Search Logic
   const handleSearch = (studentId) => {
@@ -29,7 +63,7 @@ export default function App() {
       setSearchResult(found || null);
       setIsSearching(false);
       setHasSearched(true);
-    }, 400);
+    }, 300);
   };
 
   const handleClear = () => {
@@ -55,6 +89,9 @@ export default function App() {
         <Header 
           onOpenDirectory={() => setIsDirectoryOpen(true)}
           totalStudents={totalStudents}
+          isSyncing={isSyncing}
+          onSync={syncData}
+          sheetStatus={sheetStatus}
         />
 
         {/* Core Search Form Component */}
@@ -98,13 +135,25 @@ export default function App() {
       <footer class="w-full py-5 text-center text-xs text-slate-400 border-t border-slate-900 bg-slate-950/80">
         <div class="max-w-lg mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 ระบบตรวจสอบสถานะผู้เข้าร่วมกิจกรรมนิสิต</span>
-          <button 
-            onClick={() => setIsDirectoryOpen(true)}
-            class="text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <span>ดูรหัสนิสิตทั้งหมด</span>
-            <ExternalLink class="w-3 h-3" />
-          </button>
+          <div class="flex items-center gap-3">
+            <a
+              href="https://docs.google.com/spreadsheets/d/10ibvfLk6gYnY0CAWk58JqAGGBxFjREqwVsqZTVZkJqg/edit?gid=0#gid=0"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-emerald-400/90 hover:text-emerald-300 hover:underline flex items-center gap-1 transition cursor-pointer"
+            >
+              <span>Google Sheets</span>
+              <ExternalLink class="w-3 h-3" />
+            </a>
+            <span class="text-slate-700">•</span>
+            <button 
+              onClick={() => setIsDirectoryOpen(true)}
+              class="text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>ดูรหัสนิสิตทั้งหมด</span>
+              <ExternalLink class="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </footer>
 
