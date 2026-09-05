@@ -3,7 +3,6 @@ import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import ResultCard from './components/ResultCard';
 import StudentDirectoryModal from './components/StudentDirectoryModal';
-import PassCardModal from './components/PassCardModal';
 import { fetchStudentsFromSheets, getCachedStudents } from './services/sheetsService';
 import { CheckCircle2, ShieldCheck, Clock, Users, ExternalLink, Loader2 } from 'lucide-react';
 
@@ -18,7 +17,6 @@ export default function App() {
   
   // Modals state
   const [isDirectoryOpen, setIsDirectoryOpen] = useState(false);
-  const [passStudent, setPassStudent] = useState(null);
 
   // Sync data from Google Sheets
   const syncData = useCallback(async () => {
@@ -107,7 +105,6 @@ export default function App() {
             <ResultCard 
               searchedId={searchedId}
               searchResult={searchResult}
-              onOpenPass={(st) => setPassStudent(st)}
             />
           </div>
         )}
@@ -162,13 +159,6 @@ export default function App() {
         onClose={() => setIsDirectoryOpen(false)}
         students={students}
         onSelectStudent={handleSearch}
-      />
-
-      {/* Pass Card Digital Modal */}
-      <PassCardModal 
-        student={passStudent}
-        isOpen={!!passStudent}
-        onClose={() => setPassStudent(null)}
       />
     </div>
   );

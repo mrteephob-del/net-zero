@@ -6,7 +6,6 @@ import {
   User, 
   GraduationCap, 
   Award, 
-  QrCode, 
   Recycle, 
   AlertTriangle,
   Sparkles,
@@ -15,7 +14,7 @@ import {
   UserX
 } from 'lucide-react';
 
-export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
+export default function ResultCard({ searchResult, searchedId }) {
   if (!searchedId) return null;
 
   // Case 1: NOT FOUND
@@ -253,19 +252,6 @@ export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Action Button: Digital Pass */}
-      {onOpenPass && (
-        <div class="pt-2">
-          <button
-            onClick={() => onOpenPass(searchResult)}
-            class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-900/30 flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer active:scale-[0.99]"
-          >
-            <QrCode class="w-4 h-4" />
-            <span>เปิดบัตรรับรองจิตอาสา (Digital Volunteer Pass)</span>
-          </button>
         </div>
       )}
 
