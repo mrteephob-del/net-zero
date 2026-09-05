@@ -10,7 +10,9 @@ import {
   Recycle, 
   AlertTriangle,
   Sparkles,
-  Calendar
+  Calendar,
+  UserCheck,
+  UserX
 } from 'lucide-react';
 
 export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
@@ -49,34 +51,32 @@ export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
   }
 
   // Helper for Badge Color & Styles
-  const getBadgeStyle = (status) => {
-    switch (status) {
-      case 'APPROVED':
-        return {
-          bg: 'bg-emerald-950/90 border-emerald-500/60 text-emerald-300',
-          dot: 'bg-emerald-400 animate-pulse',
-          icon: CheckCircle2,
-          iconColor: 'text-emerald-400'
-        };
-      case 'NEEDS_DOC':
-        return {
-          bg: 'bg-teal-950/90 border-teal-500/60 text-teal-300',
-          dot: 'bg-teal-400 animate-pulse',
-          icon: Sparkles,
-          iconColor: 'text-teal-400'
-        };
-      case 'PENDING':
-      default:
-        return {
-          bg: 'bg-amber-950/90 border-amber-500/60 text-amber-300',
-          dot: 'bg-amber-400 animate-ping',
-          icon: Clock,
-          iconColor: 'text-amber-400'
-        };
+  const getBadgeStyle = (status, isAttended) => {
+    if (status === 'APPROVED' || isAttended) {
+      return {
+        bg: 'bg-emerald-950/90 border-emerald-500/60 text-emerald-300',
+        dot: 'bg-emerald-400 animate-pulse',
+        icon: CheckCircle2,
+        iconColor: 'text-emerald-400'
+      };
     }
+    if (status === 'NOT_ATTENDED' || !isAttended) {
+      return {
+        bg: 'bg-rose-950/90 border-rose-500/60 text-rose-300',
+        dot: 'bg-rose-400',
+        icon: XCircle,
+        iconColor: 'text-rose-400'
+      };
+    }
+    return {
+      bg: 'bg-amber-950/90 border-amber-500/60 text-amber-300',
+      dot: 'bg-amber-400 animate-ping',
+      icon: Clock,
+      iconColor: 'text-amber-400'
+    };
   };
 
-  const badgeStyle = getBadgeStyle(searchResult.status);
+  const badgeStyle = getBadgeStyle(searchResult.status, searchResult.isAttended);
   const StatusIcon = badgeStyle.icon;
 
   return (
@@ -138,34 +138,80 @@ export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
             <p class="text-sm font-semibold text-white leading-tight">
               {searchResult.faculty}
             </p>
-            <p class="text-xs text-slate-300">
-              {searchResult.major}
+            {searchResult.major && (
+              <p class="text-xs text-slate-300 pt-0.5">
+                {searchResult.major}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Item 3: Attendance Status (สถานะการเข้าร่วมกิจกรรม) */}
+        <div class={`p-3.5 rounded-xl border flex items-start gap-3 ${
+          searchResult.isAttended 
+            ? 'bg-emerald-950/30 border-emerald-800/60' 
+            : 'bg-rose-950/30 border-rose-800/60'
+        }`}>
+          <div class={`p-2 rounded-lg shrink-0 border ${
+            searchResult.isAttended
+              ? 'bg-emerald-950/80 border-emerald-700/60 text-emerald-400'
+              : 'bg-rose-950/80 border-rose-700/60 text-rose-400'
+          }`}>
+            {searchResult.isAttended ? <UserCheck class="w-4 h-4" /> : <UserX class="w-4 h-4" />}
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">สถานะการเข้าร่วมกิจกรรม</p>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              {searchResult.isAttended ? (
+                <span class="text-sm font-bold text-emerald-300 flex items-center gap-1">
+                  <CheckCircle2 class="w-4 h-4 text-emerald-400 inline shrink-0" />
+                  เข้าร่วมกิจกรรม
+                </span>
+              ) : (
+                <span class="text-sm font-bold text-rose-400 flex items-center gap-1">
+                  <XCircle class="w-4 h-4 text-rose-400 inline shrink-0" />
+                  ไม่ได้เข้าร่วมกิจกรรม
+                </span>
+              )}
+            </div>
+            <p class="text-[11px] text-slate-400 pt-0.5">
+              {searchResult.isAttended ? 'เช็คชื่อในระบบเรียบร้อย' : 'ไม่พบข้อมูลการเช็คชื่อเข้าร่วม'}
             </p>
           </div>
         </div>
 
-        {/* Item 3: Registration Date (วันที่ลงทะเบียน) */}
+        {/* Item 4: Registration Date (วันที่ลงทะเบียน) */}
         <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/60 flex items-start gap-3">
           <div class="p-2 rounded-lg bg-indigo-950/80 border border-indigo-800/60 text-indigo-400 shrink-0">
             <Calendar class="w-4 h-4" />
           </div>
           <div>
             <p class="text-xs text-slate-400 font-medium">วันที่ลงทะเบียน</p>
-            <p class="text-sm font-bold text-indigo-300">
+            <p class="text-sm font-bold text-indigo-300 mt-0.5">
               {searchResult.regDateText ? `ลงทะเบียน${searchResult.regDateText}` : 'ลงทะเบียนตามประกาศ'}
+            </p>
+            <p class="text-[11px] text-slate-400 pt-0.5">
+              โครงการขยะแลกชั่วโมง
             </p>
           </div>
         </div>
 
-        {/* Item 4: Volunteer Hours */}
-        <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/60 flex items-start gap-3">
-          <div class="p-2 rounded-lg bg-amber-950/80 border border-amber-800/60 text-amber-400 shrink-0">
-            <Award class="w-5 h-5" />
+        {/* Item 5: Volunteer Hours (Span full width for emphasis) */}
+        <div class="sm:col-span-2 bg-gradient-to-r from-amber-950/30 via-slate-900/90 to-amber-950/20 p-4 rounded-xl border border-amber-800/40 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-xl bg-amber-950/80 border border-amber-800/60 text-amber-400 shrink-0">
+              <Award class="w-5 h-5" />
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">รวมชั่วโมงจิตอาสาที่ได้รับ</p>
+              <p class="text-xs text-slate-400">
+                {searchResult.isAttended ? 'บันทึกชั่วโมงจิตอาสาแล้ว' : 'รอการเข้าร่วมกิจกรรมเพื่อบันทึกชั่วโมง'}
+              </p>
+            </div>
           </div>
-          <div class="flex-1">
-            <p class="text-xs text-slate-400 font-medium">รวมชั่วโมงจิตอาสาที่ได้รับ</p>
-            <p class="text-lg font-extrabold text-amber-300 font-mono">
-              {searchResult.totalHours} {typeof searchResult.totalHours === 'number' || (!isNaN(searchResult.totalHours) && !String(searchResult.totalHours).includes('ชั่วโมง')) ? 'ชั่วโมง' : ''}
+          <div class="text-right">
+            <p class="text-2xl font-extrabold text-amber-300 font-mono tracking-tight">
+              {searchResult.totalHours} <span class="text-sm font-sans font-semibold text-amber-400/90">ชั่วโมง</span>
             </p>
           </div>
         </div>
@@ -186,10 +232,19 @@ export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
                   <span class="bg-indigo-950 text-indigo-300 text-[10px] font-medium px-2.5 py-0.5 rounded border border-indigo-800">
                     {sub.batch}
                   </span>
-                  <span class="text-slate-300">
-                    {sub.bottleSmall && sub.bottleSmall !== '-' 
-                      ? `ขวดเล็ก: ${sub.bottleSmall} | ขวดใหญ่: ${sub.bottleLarge} | กระป๋อง: ${sub.cans}`
-                      : (sub.details || `บันทึกกิจกรรมจิตอาสา (${sub.regDate || 'โครงการ'})`)}
+                  {sub.attended ? (
+                    <span class="bg-emerald-950/90 text-emerald-300 text-[10px] font-medium px-2 py-0.5 rounded border border-emerald-800 flex items-center gap-1">
+                      <CheckCircle2 class="w-3 h-3 text-emerald-400" />
+                      <span>เข้าร่วมกิจกรรม</span>
+                    </span>
+                  ) : (
+                    <span class="bg-rose-950/90 text-rose-300 text-[10px] font-medium px-2 py-0.5 rounded border border-rose-800 flex items-center gap-1">
+                      <XCircle class="w-3 h-3 text-rose-400" />
+                      <span>ไม่ได้เข้าร่วมกิจกรรม</span>
+                    </span>
+                  )}
+                  <span class="text-slate-300 text-[11px]">
+                    {sub.details || `บันทึกกิจกรรมจิตอาสา (${sub.regDate || 'โครงการ'})`}
                   </span>
                 </div>
                 <span class="text-amber-400 font-mono font-bold">
@@ -213,7 +268,6 @@ export default function ResultCard({ searchResult, searchedId, onOpenPass }) {
           </button>
         </div>
       )}
-
 
     </div>
   );

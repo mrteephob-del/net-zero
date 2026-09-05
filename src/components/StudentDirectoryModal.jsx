@@ -9,12 +9,15 @@ export default function StudentDirectoryModal({ isOpen, onClose, students, onSel
   if (!isOpen) return null;
 
   const filteredStudents = students.filter(student => {
-    const matchesQuery = 
+    const matchesQuery =
       student.id.includes(filterQuery) ||
       student.fullName.includes(filterQuery) ||
       student.faculty.includes(filterQuery);
-    
-    const matchesStatus = statusFilter === 'ALL' || student.status === statusFilter;
+
+    const matchesStatus = statusFilter === 'ALL' ||
+      (statusFilter === 'ATTENDED' && student.isAttended) ||
+      (statusFilter === 'NOT_ATTENDED' && !student.isAttended) ||
+      student.status === statusFilter;
     const matchesDate = dateFilter === 'ALL' || (student.regDateText && student.regDateText.includes(dateFilter));
 
     return matchesQuery && matchesStatus && matchesDate;
@@ -72,8 +75,8 @@ export default function StudentDirectoryModal({ isOpen, onClose, students, onSel
             class="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500"
           >
             <option value="ALL">สถานะทั้งหมด</option>
-            <option value="APPROVED">อนุมัติแล้ว</option>
-            <option value="PENDING">ยังไม่ถึงเกณฑ์ / รอตรวจสอบ</option>
+            <option value="ATTENDED">✅ เข้าร่วมกิจกรรม</option>
+            <option value="NOT_ATTENDED">❌ ไม่ได้เข้าร่วมกิจกรรม</option>
           </select>
         </div>
 
@@ -98,8 +101,19 @@ export default function StudentDirectoryModal({ isOpen, onClose, students, onSel
                     {student.id}
                   </span>
                   <div>
-                    <p class="text-sm font-semibold text-slate-100 group-hover:text-white flex items-center gap-2">
+                    <p class="text-sm font-semibold text-slate-100 group-hover:text-white flex flex-wrap items-center gap-2">
                       <span>{student.fullName}</span>
+                      {student.isAttended ? (
+                        <span class="text-[10px] text-emerald-300 bg-emerald-950/90 border border-emerald-800 px-2 py-0.5 rounded flex items-center gap-1 font-normal">
+                          <UserCheck class="w-3 h-3 text-emerald-400" />
+                          <span>เข้าร่วมกิจกรรม</span>
+                        </span>
+                      ) : (
+                        <span class="text-[10px] text-rose-300 bg-rose-950/90 border border-rose-800 px-2 py-0.5 rounded flex items-center gap-1 font-normal">
+                          <X class="w-3 h-3 text-rose-400" />
+                          <span>ไม่ได้เข้าร่วม</span>
+                        </span>
+                      )}
                       <span class="text-[10px] text-indigo-300 bg-indigo-950 border border-indigo-800 px-2 py-0.5 rounded flex items-center gap-1 font-normal">
                         <Calendar class="w-3 h-3 text-indigo-400" />
                         <span>{student.regDateText ? `ลงทะเบียน${student.regDateText}` : 'ลงทะเบียนแล้ว'}</span>
@@ -112,11 +126,8 @@ export default function StudentDirectoryModal({ isOpen, onClose, students, onSel
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <span class={`text-[11px] px-2.5 py-1 rounded-full font-medium border ${
-                    student.status === 'APPROVED' ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300' :
-                    student.status === 'NEEDS_DOC' ? 'bg-teal-950/80 border-teal-700 text-teal-300' :
-                    'bg-amber-950/80 border-amber-700 text-amber-300'
-                  }`}>
+                  <span class={`text-[11px] px-2.5 py-1 rounded-full font-medium border ${student.isAttended ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300' : 'bg-rose-950/80 border-rose-700 text-rose-300'
+                    }`}>
                     {student.totalHours} {typeof student.totalHours === 'number' || (!isNaN(student.totalHours) && !String(student.totalHours).includes('ชั่วโมง')) ? 'ชม.' : ''}
                   </span>
                   <ArrowRight class="w-4 h-4 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-transform" />

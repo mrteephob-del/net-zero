@@ -52,9 +52,16 @@ export default function PassCardModal({ student, isOpen, onClose }) {
             <h4 class="text-lg font-bold text-white">
               {student.fullName}
             </h4>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-center gap-2">
               <span class="font-mono text-sm font-bold bg-slate-800 text-blue-300 px-3 py-1 rounded-lg border border-slate-700">
                 รหัส: {student.id}
+              </span>
+              <span class={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                student.isAttended 
+                  ? 'bg-emerald-950/90 text-emerald-300 border-emerald-700' 
+                  : 'bg-rose-950/90 text-rose-300 border-rose-700'
+              }`}>
+                {student.isAttended ? 'เข้าร่วมกิจกรรม' : 'ไม่ได้เข้าร่วม'}
               </span>
               <span class="text-xs font-bold text-amber-300 bg-amber-950 px-2.5 py-1 rounded-lg border border-amber-800 font-mono">
                 {student.totalHours} {typeof student.totalHours === 'number' || (!isNaN(student.totalHours) && !String(student.totalHours).includes('ชั่วโมง')) ? 'ชม.' : ''}

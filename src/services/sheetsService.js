@@ -1,9 +1,14 @@
 const SHEET_ID = '10ibvfLk6gYnY0CAWk58JqAGGBxFjREqwVsqZTVZkJqg';
-const CACHE_KEY = 'net_zero_students_cache';
-const CACHE_TIME_KEY = 'net_zero_students_cache_time';
+const CACHE_KEY = 'net_zero_students_v3_cache';
+const CACHE_TIME_KEY = 'net_zero_students_v3_cache_time';
 
 export function getCachedStudents() {
   try {
+    // Purge old legacy cache versions if present
+    localStorage.removeItem('net_zero_students_cache');
+    localStorage.removeItem('net_zero_students_cache_time');
+    localStorage.removeItem('net_zero_students_v2_cache');
+    
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) return JSON.parse(cached);
   } catch (e) {
@@ -52,48 +57,43 @@ async function fetchTabCsv(gid) {
 
 export async function fetchStudentsFromSheets() {
   try {
-    // Parallel fetch: Day 3 summary (848175127), Day 4 summary (471660602), Day 3 details (0), Day 4 details (861575028)
-    const [raw3, raw4, det3, det4] = await Promise.all([
-      fetchTabCsv('848175127'),
-      fetchTabCsv('471660602'),
-      fetchTabCsv('0'),
-      fetchTabCsv('861575028')
+    // Fetch only Sheet: สำเนาของ 3 (gid: 848175127) and สำเนาของ 4 (gid: 471660602)
+    const [raw3, raw4] = await Promise.all([
+      fetchTabCsv('848175127'), // สำเนาของ 3
+      fetchTabCsv('471660602')  // สำเนาของ 4
     ]);
 
     const rows3 = parseCsv(raw3);
     const rows4 = parseCsv(raw4);
-    const detailRows3 = parseCsv(det3);
-    const detailRows4 = parseCsv(det4);
-
-    // Map student ID to major/details
-    const detailMap = new Map();
-    [...detailRows3, ...detailRows4].forEach(r => {
-      const id = r[1]?.replace(/\D/g, '');
-      const major = r[4]; // 7. สาขา
-      if (id && major && major.length > 1) {
-        detailMap.set(id, {
-          major: major,
-          bottleSmall: r[6] || '-',
-          bottleLarge: r[8] || '-',
-          cans: r[10] || '-',
-          glassSmall: r[12] || '-',
-          glassLarge: r[14] || '-',
-          paper: r[16] || '-',
-          clothes: r[18] || '-'
-        });
-      }
-    });
 
     const studentMap = new Map();
 
     const processRow = (r, batchLabel, regDate) => {
-      const id = r[1]?.replace(/\D/g, '');
-      if (!id || id.length !== 8) return;
+      let id = '';
+      let fullName = '';
+      let faculty = '';
+      let hours = 0;
+      let isAttended = false;
 
-      const fullName = r[2] || '';
-      const faculty = r[3] || '';
-      const hours = parseFloat(r[4]) || 0;
-      const detailInfo = detailMap.get(id);
+      // Col 0 = No, Col 1 = Student ID, Col 2 = Name, Col 3 = Faculty, Col 4 = Hours, Col 5 = Status (Checkbox TRUE/FALSE)
+      const idFromCol1 = r[1]?.replace(/\D/g, '');
+      const idFromCol2 = r[2]?.replace(/\D/g, '');
+
+      if (idFromCol1 && idFromCol1.length === 8) {
+        id = idFromCol1;
+        fullName = r[2] || '';
+        faculty = r[3] || '';
+        hours = parseFloat(r[4]) || 0;
+        isAttended = String(r[5] || '').toUpperCase().includes('TRUE');
+      } else if (idFromCol2 && idFromCol2.length === 8) {
+        id = idFromCol2;
+        fullName = r[3] || '';
+        faculty = r[4] || '';
+        hours = parseFloat(r[5]) || 0;
+        isAttended = String(r[0] || r[6] || '').toUpperCase().includes('TRUE');
+      } else {
+        return;
+      }
 
       if (!studentMap.has(id)) {
         const prefix = id.slice(0, 2);
@@ -107,7 +107,7 @@ export async function fetchStudentsFromSheets() {
           id,
           fullName,
           faculty,
-          major: detailInfo?.major || '',
+          major: '',
           year,
           submissions: [],
           dates: new Set()
@@ -118,8 +118,8 @@ export async function fetchStudentsFromSheets() {
       if (fullName.length > st.fullName.length) {
         st.fullName = fullName;
       }
-      if (!st.major && detailInfo?.major) {
-        st.major = detailInfo.major;
+      if (!st.faculty && faculty) {
+        st.faculty = faculty;
       }
       st.dates.add(regDate);
       st.submissions.push({
@@ -127,10 +127,9 @@ export async function fetchStudentsFromSheets() {
         regDate: regDate,
         hours: hours,
         totalHours: hours + ' ชม.',
-        details: 'บันทึกชั่วโมงจิตอาสา Net-Zero',
-        bottleSmall: detailInfo?.bottleSmall,
-        bottleLarge: detailInfo?.bottleLarge,
-        cans: detailInfo?.cans
+        attended: isAttended,
+        attendedText: isAttended ? 'เข้าร่วมกิจกรรม' : 'ไม่ได้เข้าร่วมกิจกรรม',
+        details: `บันทึกชั่วโมงจิตอาสา Net-Zero (${batchLabel})`
       });
     };
 
@@ -138,8 +137,9 @@ export async function fetchStudentsFromSheets() {
     rows4.forEach(r => processRow(r, 'รอบวันที่ 4 ก.ย.', 'วันที่ 4'));
 
     const students = Array.from(studentMap.values()).map(s => {
-      const totalHours = Math.round(s.submissions.reduce((acc, sub) => acc + sub.hours, 0) * 10) / 10;
-      const isApproved = totalHours > 0;
+      const rawTotalHours = Math.round(s.submissions.reduce((acc, sub) => acc + sub.hours, 0) * 10) / 10;
+      const isAttended = s.submissions.some(sub => sub.attended);
+      const isApproved = isAttended && rawTotalHours > 0;
       const regDateText = s.dates.size > 1 ? 'วันที่ 3 และ 4' : [...s.dates][0];
 
       return {
@@ -148,11 +148,17 @@ export async function fetchStudentsFromSheets() {
         faculty: s.faculty,
         major: s.major,
         year: s.year,
-        status: isApproved ? 'APPROVED' : 'PENDING',
-        statusText: isApproved ? 'ผ่านการอนุมัติชั่วโมงจิตอาสา' : 'ยังไม่ถึงเกณฑ์ / รอตรวจสอบ',
-        badgeColor: isApproved ? 'emerald' : 'amber',
-        totalHours: totalHours,
-        totalHoursNumeric: totalHours,
+        isAttended: isAttended,
+        attendanceStatus: isAttended ? 'ATTENDED' : 'NOT_ATTENDED',
+        attendanceText: isAttended ? 'เข้าร่วมกิจกรรม' : 'ไม่ได้เข้าร่วมกิจกรรม',
+        attendanceColor: isAttended ? 'emerald' : 'rose',
+        status: isApproved ? 'APPROVED' : (!isAttended ? 'NOT_ATTENDED' : 'PENDING'),
+        statusText: isApproved 
+          ? 'ผ่านการอนุมัติชั่วโมงจิตอาสา' 
+          : (!isAttended ? 'ไม่ได้เข้าร่วมกิจกรรม' : 'ยังไม่ถึงเกณฑ์ / รอตรวจสอบ'),
+        badgeColor: isApproved ? 'emerald' : (!isAttended ? 'rose' : 'amber'),
+        totalHours: rawTotalHours,
+        totalHoursNumeric: rawTotalHours,
         regDateText: regDateText,
         submissions: s.submissions,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.id}`

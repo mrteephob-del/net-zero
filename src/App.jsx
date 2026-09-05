@@ -73,7 +73,7 @@ export default function App() {
 
   // Quick stats calculation
   const totalStudents = students.length;
-  const approvedCount = students.filter(s => s.status === 'APPROVED').length;
+  const attendedCount = students.filter(s => s.isAttended).length;
   const totalVolunteerHours = Math.round(students.reduce((sum, s) => sum + (s.totalHoursNumeric || 0), 0) * 10) / 10;
 
   return (
@@ -119,8 +119,8 @@ export default function App() {
             <p class="text-base font-bold text-blue-400 font-mono">{totalStudents} คน</p>
           </div>
           <div class="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl text-center">
-            <p class="text-[11px] text-slate-400 font-medium">ผ่านการอนุมัติ</p>
-            <p class="text-base font-bold text-emerald-400 font-mono">{approvedCount} คน</p>
+            <p class="text-[11px] text-slate-400 font-medium">เข้าร่วมกิจกรรม</p>
+            <p class="text-base font-bold text-emerald-400 font-mono">{attendedCount} คน</p>
           </div>
           <div class="bg-slate-900/70 border border-slate-800 p-2.5 rounded-xl text-center">
             <p class="text-[11px] text-slate-400 font-medium">รวมชั่วโมงสะสม</p>
